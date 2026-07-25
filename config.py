@@ -64,6 +64,9 @@ MAX_PAGES_PER_CATEGORY = 60        # crawl ceiling, keeps a bug from crawling th
 # --- Chunking -------------------------------------------------------------
 FIXED_CHUNK_TOKENS = 400
 FIXED_CHUNK_OVERLAP = 60
+MIN_CHUNK_TOKENS = 30              # merge chunks smaller than this into neighbors
+MAX_CHUNK_TOKENS = 512             # sub-split structure-aware chunks exceeding this
+NEAR_DEDUP_THRESHOLD = 0.85        # Jaccard threshold for MinHash near-dedup
 # Rough words-per-token ratio for English text, used since we chunk before
 # tying the pipeline to any one tokenizer. Swap in a real tokenizer
 # (e.g. tiktoken) later without changing anything upstream of chunk.py.
