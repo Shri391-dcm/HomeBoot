@@ -78,7 +78,7 @@ query_embedding = create_embedding(query).tolist()
 results = hybrid.search(
     query=query,
     query_vector=query_embedding,
-    top_k=5
+    top_k=20
 )
 
 
