@@ -1,0 +1,22 @@
+[
+  {
+    "query": "My washing machine is not draining",
+    "expected_category": "washer"
+  },
+  {
+    "query": "My dishwasher has standing water at the bottom",
+    "expected_category": "dishwasher"
+  },
+  {
+    "query": "My refrigerator is not making ice",
+    "expected_category": "refrigerator"
+  },
+  {
+    "query": "The washer is leaking water",
+    "expected_category": "washer"
+  },
+  {
+    "query": "My freezer is not cooling",
+    "expected_category": "freezer"
+  }
+]
