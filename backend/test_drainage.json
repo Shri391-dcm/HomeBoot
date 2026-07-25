@@ -1,0 +1,60 @@
+{
+  "query": "my washing machine won't drain",
+  "retrieved_passages": [
+    {
+      "rank": 1,
+      "chunk_id": "whirlpool_washer_drain_1",
+      "text": "If water won't drain from your washer, first check the drain pump filter for clogs. Drain filter clogs are one of the most common causes of drainage issues. The filter is usually located at the bottom front of the machine.",
+      "source_url": "https://www.whirlpool.com/en-us/support/washers/drainage",
+      "heading_path": "Troubleshooting > Drainage Issues",
+      "page_type": "support_page",
+      "effective_date": "2024-07-01",
+      "pre_rerank_score": 0.87,
+      "post_rerank_score": 0.95
+    },
+    {
+      "rank": 2,
+      "chunk_id": "whirlpool_washer_hoses_1",
+      "text": "Check the inlet hoses for kinks or damage that might restrict water flow. Kinked hoses can prevent proper drainage and water fill. Straighten any bent hoses and replace if damaged.",
+      "source_url": "https://www.whirlpool.com/en-us/support/washers/hoses",
+      "heading_path": "Maintenance > Inlet Hoses",
+      "page_type": "support_page",
+      "effective_date": "2024-06-15",
+      "pre_rerank_score": 0.82,
+      "post_rerank_score": 0.88
+    },
+    {
+      "rank": 3,
+      "chunk_id": "ge_washer_drain_1",
+      "text": "For GE washers, drainage problems often stem from a blocked drain hose. Remove the drain hose from the back of the machine and check for blockages. You can use a plumbing snake to clear any debris.",
+      "source_url": "https://www.ge.com/appliances/support/washers/drainage",
+      "heading_path": "Troubleshooting > Drain Hose",
+      "page_type": "support_page",
+      "effective_date": "2024-07-05",
+      "pre_rerank_score": 0.78,
+      "post_rerank_score": 0.84
+    },
+    {
+      "rank": 4,
+      "chunk_id": "whirlpool_error_codes_1",
+      "text": "Error code F21 indicates a drainage failure. This usually means the drain pump is not working or the filter is blocked. Restart the cycle after clearing the filter.",
+      "source_url": "https://www.whirlpool.com/en-us/support/washers/error-codes",
+      "heading_path": "Error Codes > F21",
+      "page_type": "support_page",
+      "effective_date": "2024-07-01",
+      "pre_rerank_score": 0.75,
+      "post_rerank_score": 0.81
+    },
+    {
+      "rank": 5,
+      "chunk_id": "ge_washer_pump_1",
+      "text": "If your GE washer still won't drain after checking the filter and hose, the drain pump may be faulty and require replacement. Contact customer service for repair options.",
+      "source_url": "https://www.ge.com/appliances/support/washers/drain-pump",
+      "heading_path": "Troubleshooting > Drain Pump",
+      "page_type": "support_page",
+      "effective_date": "2024-06-20",
+      "pre_rerank_score": 0.71,
+      "post_rerank_score": 0.77
+    }
+  ]
+}

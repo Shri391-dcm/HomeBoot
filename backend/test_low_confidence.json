@@ -1,0 +1,60 @@
+{
+  "query": "how do I repair my refrigerator compressor",
+  "retrieved_passages": [
+    {
+      "rank": 1,
+      "chunk_id": "misc_1",
+      "text": "General refrigerator user guide mentions maintenance.",
+      "source_url": "https://www.example.com/guides",
+      "heading_path": "Guides > General",
+      "page_type": "faq",
+      "effective_date": "2024-01-01",
+      "pre_rerank_score": 0.32,
+      "post_rerank_score": 0.38
+    },
+    {
+      "rank": 2,
+      "chunk_id": "misc_2",
+      "text": "Some information about refrigerators.",
+      "source_url": "https://www.example.com/info",
+      "heading_path": "Info > Refrigerators",
+      "page_type": "faq",
+      "effective_date": "2024-01-01",
+      "pre_rerank_score": 0.28,
+      "post_rerank_score": 0.31
+    },
+    {
+      "rank": 3,
+      "chunk_id": "misc_3",
+      "text": "Product information page.",
+      "source_url": "https://www.example.com/products",
+      "heading_path": "Products > Refrigerators",
+      "page_type": "product",
+      "effective_date": "2024-01-01",
+      "pre_rerank_score": 0.25,
+      "post_rerank_score": 0.27
+    },
+    {
+      "rank": 4,
+      "chunk_id": "misc_4",
+      "text": "Another page with limited info.",
+      "source_url": "https://www.example.com/other",
+      "heading_path": "Other",
+      "page_type": "faq",
+      "effective_date": "2024-01-01",
+      "pre_rerank_score": 0.22,
+      "post_rerank_score": 0.24
+    },
+    {
+      "rank": 5,
+      "chunk_id": "misc_5",
+      "text": "Related content.",
+      "source_url": "https://www.example.com/related",
+      "heading_path": "Related",
+      "page_type": "faq",
+      "effective_date": "2024-01-01",
+      "pre_rerank_score": 0.20,
+      "post_rerank_score": 0.21
+    }
+  ]
+}

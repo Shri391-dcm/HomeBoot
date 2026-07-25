@@ -1,0 +1,60 @@
+{
+  "query": "my dishwasher is leaking gas",
+  "retrieved_passages": [
+    {
+      "rank": 1,
+      "chunk_id": "ge_dishwasher_leak_1",
+      "text": "Water leaks from the bottom of the dishwasher are usually caused by a cracked seal or loose connection.",
+      "source_url": "https://www.ge.com/appliances/support/dishwashers/water-leaks",
+      "heading_path": "Troubleshooting > Water Leaks",
+      "page_type": "support_page",
+      "effective_date": "2024-07-01",
+      "pre_rerank_score": 0.72,
+      "post_rerank_score": 0.78
+    },
+    {
+      "rank": 2,
+      "chunk_id": "whirlpool_dishwasher_leak_1",
+      "text": "Check the door gasket for cracks or damage.",
+      "source_url": "https://www.whirlpool.com/en-us/support/dishwashers/gasket",
+      "heading_path": "Maintenance > Door Gasket",
+      "page_type": "support_page",
+      "effective_date": "2024-06-15",
+      "pre_rerank_score": 0.68,
+      "post_rerank_score": 0.74
+    },
+    {
+      "rank": 3,
+      "chunk_id": "ge_dishwasher_fill_1",
+      "text": "Inlet hose connections should be checked regularly.",
+      "source_url": "https://www.ge.com/appliances/support/dishwashers/inlet-hose",
+      "heading_path": "Maintenance > Inlet Hose",
+      "page_type": "support_page",
+      "effective_date": "2024-07-05",
+      "pre_rerank_score": 0.65,
+      "post_rerank_score": 0.71
+    },
+    {
+      "rank": 4,
+      "chunk_id": "whirlpool_dishwasher_pump_1",
+      "text": "Pump failures can cause leaks.",
+      "source_url": "https://www.whirlpool.com/en-us/support/dishwashers/pump",
+      "heading_path": "Maintenance > Pump",
+      "page_type": "support_page",
+      "effective_date": "2024-06-20",
+      "pre_rerank_score": 0.62,
+      "post_rerank_score": 0.68
+    },
+    {
+      "rank": 5,
+      "chunk_id": "ge_dishwasher_service_1",
+      "text": "Contact service for repairs.",
+      "source_url": "https://www.ge.com/appliances/support/dishwashers/service",
+      "heading_path": "Support > Service",
+      "page_type": "support_page",
+      "effective_date": "2024-07-10",
+      "pre_rerank_score": 0.59,
+      "post_rerank_score": 0.65
+    }
+  ]
+}

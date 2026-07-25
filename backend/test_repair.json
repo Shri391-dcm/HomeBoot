@@ -1,0 +1,60 @@
+{
+  "query": "how do I repair my dishwasher door latch",
+  "retrieved_passages": [
+    {
+      "rank": 1,
+      "chunk_id": "ge_dishwasher_latch_1",
+      "text": "If your dishwasher door won't latch, first check if dishes are blocking the door. Remove any items that may be preventing a full close. The door should close firmly with a clicking sound.",
+      "source_url": "https://www.ge.com/appliances/support/dishwashers/door-latch",
+      "heading_path": "Troubleshooting > Door Won't Close",
+      "page_type": "support_page",
+      "effective_date": "2024-07-01",
+      "pre_rerank_score": 0.89,
+      "post_rerank_score": 0.96
+    },
+    {
+      "rank": 2,
+      "chunk_id": "ge_dishwasher_alignment_1",
+      "text": "Check if the door is properly aligned with the frame. Misalignment can prevent the latch from catching. Adjust the hinges if needed using the screws on the inside of the door.",
+      "source_url": "https://www.ge.com/appliances/support/dishwashers/door-alignment",
+      "heading_path": "Maintenance > Door Alignment",
+      "page_type": "support_page",
+      "effective_date": "2024-06-25",
+      "pre_rerank_score": 0.84,
+      "post_rerank_score": 0.91
+    },
+    {
+      "rank": 3,
+      "chunk_id": "whirlpool_dishwasher_latch_1",
+      "text": "Whirlpool dishwasher latches may wear out over time. If the door won't stay latched even when properly aligned, the latch assembly may need replacement. This is a common maintenance item.",
+      "source_url": "https://www.whirlpool.com/en-us/support/dishwashers/latches",
+      "heading_path": "Maintenance > Latch Assembly",
+      "page_type": "support_page",
+      "effective_date": "2024-07-10",
+      "pre_rerank_score": 0.79,
+      "post_rerank_score": 0.86
+    },
+    {
+      "rank": 4,
+      "chunk_id": "ge_dishwasher_springs_1",
+      "text": "Door springs help close the dishwasher door. If springs are broken or loose, the door may not close properly. Check and replace springs if necessary.",
+      "source_url": "https://www.ge.com/appliances/support/dishwashers/springs",
+      "heading_path": "Maintenance > Door Springs",
+      "page_type": "support_page",
+      "effective_date": "2024-06-18",
+      "pre_rerank_score": 0.76,
+      "post_rerank_score": 0.82
+    },
+    {
+      "rank": 5,
+      "chunk_id": "whirlpool_dishwasher_service_1",
+      "text": "For complex dishwasher repairs, we recommend contacting an authorized Whirlpool service center. They have the right parts and expertise for safe repairs.",
+      "source_url": "https://www.whirlpool.com/en-us/support/dishwashers/service",
+      "heading_path": "Support > Service Centers",
+      "page_type": "support_page",
+      "effective_date": "2024-07-05",
+      "pre_rerank_score": 0.72,
+      "post_rerank_score": 0.78
+    }
+  ]
+}
