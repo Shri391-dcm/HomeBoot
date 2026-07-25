@@ -1,0 +1,39 @@
+# Clean Washer Light - Washer
+
+## Possible Solutions
+
+### Are you using High Efficiency (HE) detergent?
+
+The use of non-HE detergent can cause a film residue, which can result in odor or smell. Always use the detergent manufacturer's recommended amount of detergent.
+
+Whirlpool recommends using Swash® laundry detergent.
+
+For more information on the importance of HE detergent use in your washer, check out HE Detergent use in a Washer.
+
+### Have you performed a "Clean Washer" cycle?
+
+Run the Clean Washer cycle every month to maintain washer freshness. This procedure helps keep odors from developing in your washer. The Clean Washer cycle uses higher water volumes in combination with affresh® washer cleaner or liquid chlorine bleach to thoroughly clean the inside of the washer.
+
+For more information on cleaning the Interior of a Washer, check out this article.
+
+### Still need help? Contact us or schedule service.
+
+Please contact us or click below to make an appointment from our preferred list of service providers for service on your appliances.
+
+##### United States
+
+##### Canada
+
+### Interested in purchasing an Extended Service Plan?
+
+Please click below to learn more on how you can save up to 25% on New Appliance Extended Service Plans within 30 days of your appliance purchase.
+
+##### United States
+
+##### Canada
+
+##### Flipping the detergent world on its cap.
+
+Just flip it, squeeze it, and start your laundry cycle. With this easy squeeze, you get the right amount and the clean you want every time.
+
+Shop Swash® HE Ultra-Concentrated Liquid Laundry Detergent.
