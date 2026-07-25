@@ -148,7 +148,19 @@ def build(strategy_filter: str | None = None):
 
     new_chunks = []
     for record in records:
-        text = Path(record["normalized_path"]).read_text(encoding="utf-8")
+        # Resolve path: if absolute path doesn't exist, reconstruct from relative path
+        normalized_path = Path(record["normalized_path"])
+        if not normalized_path.exists():
+            # Extract filename from the old path and reconstruct using current project root
+            old_path = Path(record["normalized_path"])
+            filename = old_path.name  # e.g., "557f1b030619b0e9.md"
+            normalized_path = NORMALIZED_DIR / record["brand"] / record["category"] / filename
+        
+        if not normalized_path.exists():
+            logger.warning(f"Normalized file not found: {normalized_path}, skipping")
+            continue
+            
+        text = normalized_path.read_text(encoding="utf-8")
         url = record["url"]
         meta = {
             "url": url, "brand": record["brand"], "category": record["category"],
