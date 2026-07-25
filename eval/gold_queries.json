@@ -1,0 +1,72 @@
+[
+  {
+    "query": "My Whirlpool washer shows error code F5 E2, what does it mean?",
+    "expected_support_type": "error_code",
+    "expected_brand": "whirlpool",
+    "expected_category": "washer",
+    "expected_answer_keywords": ["F5", "E2", "lid", "lock"]
+  },
+  {
+    "query": "How do I install a GE dishwasher?",
+    "expected_support_type": "installation",
+    "expected_brand": "ge",
+    "expected_category": "dishwasher",
+    "expected_answer_keywords": ["install", "connect", "water line", "level"]
+  },
+  {
+    "query": "My refrigerator is not cooling, what should I check?",
+    "expected_support_type": "troubleshooting",
+    "expected_brand": null,
+    "expected_category": "refrigerator",
+    "expected_answer_keywords": ["condenser", "thermostat", "coils", "fan"]
+  },
+  {
+    "query": "How often should I clean my dishwasher filter?",
+    "expected_support_type": "maintenance",
+    "expected_brand": null,
+    "expected_category": "dishwasher",
+    "expected_answer_keywords": ["filter", "clean", "monthly", "rinse"]
+  },
+  {
+    "query": "What does the Whirlpool warranty cover?",
+    "expected_support_type": "warranty",
+    "expected_brand": "whirlpool",
+    "expected_category": null,
+    "expected_answer_keywords": ["warranty", "year", "parts", "labor"]
+  },
+  {
+    "query": "Where can I order a replacement water inlet valve for my washer?",
+    "expected_support_type": "parts",
+    "expected_brand": null,
+    "expected_category": "washer",
+    "expected_answer_keywords": ["part", "order", "inlet valve", "replace"]
+  },
+  {
+    "query": "What are the safety precautions for a gas dryer?",
+    "expected_support_type": "safety",
+    "expected_brand": null,
+    "expected_category": null,
+    "expected_answer_keywords": ["gas", "ventilation", "flammable", "caution"]
+  },
+  {
+    "query": "What are the dimensions of the GE Profile refrigerator?",
+    "expected_support_type": "specifications",
+    "expected_brand": "ge",
+    "expected_category": "refrigerator",
+    "expected_answer_keywords": ["width", "height", "depth", "capacity"]
+  },
+  {
+    "query": "How do I use the delicate cycle on my Whirlpool washer?",
+    "expected_support_type": "usage",
+    "expected_brand": "whirlpool",
+    "expected_category": "washer",
+    "expected_answer_keywords": ["delicate", "cycle", "temperature", "spin"]
+  },
+  {
+    "query": "My dishwasher door won't close properly",
+    "expected_support_type": "troubleshooting",
+    "expected_brand": null,
+    "expected_category": "dishwasher",
+    "expected_answer_keywords": ["latch", "door", "align", "strike"]
+  }
+]
