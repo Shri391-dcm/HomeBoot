@@ -4,3 +4,8 @@ trafilatura>=1.8
 pymupdf>=1.24
 pdfplumber>=0.11
 certifi>=2024.2.2
+chromadb==1.5.9
+rank-bm25==0.2.2
+sentence-transformers==5.1.2
+scikit-learn==1.6.1
+numpy==2.0.2

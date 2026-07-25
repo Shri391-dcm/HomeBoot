@@ -257,3 +257,4 @@ id_ed25519
 .pypirc
 credentials.json
 token.json
+data/vector_db/
