@@ -1,0 +1,26 @@
+
+Query: My washing machine is not draining
+
+Query: My dishwasher has standing water at the bottom
+
+Query: My refrigerator is not making ice
+
+Query: The washer is leaking water
+
+Query: My freezer is not cooling
+
+
+Evaluation Results
+
+Hybrid
+----------------------
+Recall@5: 0.8
+MRR: 0.55
+Avg Latency: 0.034 seconds
+
+Hybrid + Reranker
+----------------------
+Recall@5: 0.8
+MRR: 0.64
+Avg Latency: 1.648 seconds
+
