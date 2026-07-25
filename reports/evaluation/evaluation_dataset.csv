@@ -1,0 +1,51 @@
+ID,Question,Appliance,Intent,Expected_Brand,Expected_Category,Expected_Title
+1,Why won't my washer drain?,Washer,Troubleshooting,Whirlpool,washer,Top Load Washer
+2,Why is my washer not spinning?,Washer,Troubleshooting,Whirlpool,washer,Top Load Washer
+3,Why is my washer taking too long to finish?,Washer,Troubleshooting,Whirlpool,washer,Top Load Washer
+4,How do I cancel a wash cycle?,Washer,Operation,Whirlpool,washer,Top Load Washer
+5,Why are my clothes still wet after the cycle?,Washer,Troubleshooting,Whirlpool,washer,Top Load Washer
+6,Why won't my washer fill with water?,Washer,Troubleshooting,Whirlpool,washer,Top Load Washer
+7,Why isn't my washer rinsing properly?,Washer,Troubleshooting,Whirlpool,washer,Top Load Washer
+8,Why is the Sense and Wash light flashing?,Washer,Troubleshooting,Whirlpool,washer,Top Load Washer
+9,Why does my washer stop in the middle of the cycle?,Washer,Troubleshooting,Whirlpool,washer,Top Load Washer
+10,Why is my washer continuously filling and draining?,Washer,Troubleshooting,Whirlpool,washer,Top Load Washer
+11,How do I clean my washer?,Washer,Maintenance,Whirlpool,washer,Washers
+12,How often should I clean my washer?,Washer,Maintenance,Whirlpool,washer,Washers
+13,How much detergent should I use?,Washer,Operation,Whirlpool,washer,Washers
+14,How do I level my washing machine?,Washer,Installation,Whirlpool,washer,Washers
+15,Is my washer covered under warranty?,Washer,Warranty,Whirlpool,washer,Washers
+16,Why isn't my refrigerator cooling?,Refrigerator,Troubleshooting,GE,refrigerator,Refrigerator
+17,Why is my freezer too warm?,Refrigerator,Troubleshooting,GE,refrigerator,Refrigerator
+18,Why is my refrigerator making loud noises?,Refrigerator,Troubleshooting,GE,refrigerator,Refrigerator
+19,Why isn't the ice maker working?,Refrigerator,Troubleshooting,GE,refrigerator,Refrigerator
+20,How do I replace the water filter?,Refrigerator,Maintenance,GE,refrigerator,Refrigerator
+21,How often should I replace the water filter?,Refrigerator,Maintenance,GE,refrigerator,Refrigerator
+22,How do I adjust the refrigerator temperature?,Refrigerator,Operation,GE,refrigerator,Refrigerator
+23,Why is water leaking from my refrigerator?,Refrigerator,Troubleshooting,GE,refrigerator,Refrigerator
+24,How do I clean my refrigerator?,Refrigerator,Cleaning,GE,refrigerator,Refrigerator
+25,How do I defrost the freezer?,Refrigerator,Maintenance,GE,refrigerator,Refrigerator
+26,Why does my refrigerator door not close properly?,Refrigerator,Troubleshooting,GE,refrigerator,Refrigerator
+27,How do I install my refrigerator?,Refrigerator,Installation,GE,refrigerator,Refrigerator
+28,Can I change the door swing direction?,Refrigerator,Installation,GE,refrigerator,Refrigerator
+29,Is my refrigerator under warranty?,Refrigerator,Warranty,GE,refrigerator,Refrigerator
+30,How can I save energy with my refrigerator?,Refrigerator,Energy Saving,GE,refrigerator,Refrigerator
+31,Why won't my dishwasher start?,Dishwasher,Troubleshooting,GE,dishwasher,Dishwasher
+32,Why isn't my dishwasher draining?,Dishwasher,Troubleshooting,GE,dishwasher,Dishwasher
+33,Why are my dishes still dirty after washing?,Dishwasher,Troubleshooting,GE,dishwasher,Dishwasher
+34,How do I clean the dishwasher filter?,Dishwasher,Maintenance,GE,dishwasher,Dishwasher
+35,How often should I clean the dishwasher filter?,Dishwasher,Maintenance,GE,dishwasher,Dishwasher
+36,How do I load dishes correctly?,Dishwasher,Operation,GE,dishwasher,Dishwasher
+37,Why is my dishwasher leaking water?,Dishwasher,Troubleshooting,GE,dishwasher,Dishwasher
+38,How do I install my dishwasher?,Dishwasher,Installation,GE,dishwasher,Dishwasher
+39,How do I sanitize my dishwasher?,Dishwasher,Cleaning,GE,dishwasher,Dishwasher
+40,Is my dishwasher covered by warranty?,Dishwasher,Warranty,GE,dishwasher,Dishwasher
+41,Why isn't my dryer heating?,Dryer,Troubleshooting,Whirlpool,dryer,Dryer
+42,Why is my dryer taking too long to dry clothes?,Dryer,Troubleshooting,Whirlpool,dryer,Dryer
+43,Why does my dryer stop during a cycle?,Dryer,Troubleshooting,Whirlpool,dryer,Dryer
+44,How do I clean the lint filter?,Dryer,Maintenance,Whirlpool,dryer,Dryer
+45,How often should I clean the lint filter?,Dryer,Maintenance,Whirlpool,dryer,Dryer
+46,How do I install my dryer?,Dryer,Installation,Whirlpool,dryer,Dryer
+47,How do I select the correct drying cycle?,Dryer,Operation,Whirlpool,dryer,Dryer
+48,Why is my dryer making unusual noises?,Dryer,Troubleshooting,Whirlpool,dryer,Dryer
+49,How do I reduce drying time?,Dryer,Energy Saving,Whirlpool,dryer,Dryer
+50,Is my dryer covered under warranty?,Dryer,Warranty,Whirlpool,dryer,Dryer
