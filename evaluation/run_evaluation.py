@@ -33,7 +33,7 @@ with open(
 ) as file:
     golden_data = json.load(file)
 
-# Supports both:
+# Supports:
 # 1. A simple JSON list
 # 2. The newer {"items": [...]} format
 if isinstance(golden_data, dict):
@@ -59,6 +59,9 @@ with open(
         for line in file
         if line.strip()
     ]
+
+if not chunks:
+    raise ValueError("No chunks were found.")
 
 bm25 = BM25Search(chunks)
 
@@ -157,11 +160,11 @@ def is_relevant(result, gold_item):
     """
     Determine whether a retrieved result is relevant.
 
-    Preferred method:
-    Match against manually verified chunk IDs.
+    Preferred:
+    Match manually verified chunk IDs.
 
     Temporary fallback:
-    Match against expected appliance category.
+    Match expected appliance category.
     """
 
     relevant_chunk_ids = set(
@@ -196,7 +199,7 @@ def recall_at_k(
     gold_item,
     k,
 ):
-    """Return 1 when at least one relevant result is in top K."""
+    """Return 1 if a relevant result appears in the top K."""
 
     return int(
         any(
@@ -236,8 +239,8 @@ evaluated_queries = 0
 
 for gold_item in evaluation_queries:
 
-    # Unanswerable questions are evaluated separately
-    # using refusal accuracy, not retrieval Recall/MRR.
+    # Unanswerable questions should later be measured
+    # using refusal accuracy.
     if gold_item.get("answerable") is False:
         continue
 
@@ -258,7 +261,7 @@ for gold_item in evaluation_queries:
 
     print("\nQuery:", query)
 
-    # Create a fresh embedding for this query.
+    # Create a fresh embedding for every question.
     query_embedding = create_embedding(
         query
     ).tolist()
@@ -285,11 +288,14 @@ for gold_item in evaluation_queries:
         gold_item,
         CANDIDATE_K,
     )
+
+    # Show which query failed to find a relevant
+    # result inside the top-20 candidate pool.
     if candidate_recall_20 == 0:
-    print(
-        "FAILED Recall@20:",
-        query,
-    )
+        print(
+            "FAILED Recall@20:",
+            query,
+        )
 
     methods["Hybrid"].append(
         {
@@ -323,7 +329,7 @@ for gold_item in evaluation_queries:
         - rerank_start
     )
 
-    # Professor requires final top 5 or fewer.
+    # Final output contains five results or fewer.
     final_reranked_results = (
         reranked_pool[:FINAL_K]
     )
@@ -331,7 +337,7 @@ for gold_item in evaluation_queries:
     methods["Hybrid + Reranker"].append(
         {
             # Recall@20 is measured before reranking.
-            # This is the reranker's maximum possible ceiling.
+            # It represents the reranker's ceiling.
             "recall@20": candidate_recall_20,
             "recall@5": recall_at_k(
                 final_reranked_results,
@@ -372,7 +378,7 @@ def average(results, metric_name):
 
 
 # --------------------------------------------------
-# Print report
+# Print evaluation report
 # --------------------------------------------------
 
 print("\n\nEvaluation Results")
@@ -403,18 +409,22 @@ for method_name, results in methods.items():
 
     print(method_name)
     print("----------------------")
+
     print(
         "Recall@20:",
         round(recall_20, 3),
     )
+
     print(
         "Recall@5:",
         round(recall_5, 3),
     )
+
     print(
         "MRR:",
         round(mrr, 3),
     )
+
     print(
         "Avg Latency:",
         round(latency, 3),
@@ -444,6 +454,7 @@ for method_name, results in methods.items():
 # --------------------------------------------------
 
 hybrid_results_summary = methods["Hybrid"]
+
 reranked_results_summary = methods[
     "Hybrid + Reranker"
 ]
@@ -475,6 +486,7 @@ average_reranker_latency = average(
 
 print("Reranker Lift")
 print("----------------------")
+
 print(
     "Recall@5 Lift:",
     round(
@@ -483,6 +495,7 @@ print(
         3,
     ),
 )
+
 print(
     "MRR Lift:",
     round(
@@ -491,6 +504,7 @@ print(
         3,
     ),
 )
+
 print(
     "Added Latency:",
     round(
