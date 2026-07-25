@@ -1,0 +1,609 @@
+/* ===========================
+   GLOBAL
+=========================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    background: #F5F7FB;
+    color: #1d2939;
+}
+
+/* ===========================
+   NAVBAR
+=========================== */
+
+nav {
+    width: 92%;
+    margin: 25px auto;
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 18px 35px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 8px 25px rgba(0,0,0,.08);
+}
+
+.logo {
+    display: flex;
+    flex-direction: column;
+    font-size: 30px;
+    font-weight: 800;
+    color: #1565F5;
+}
+
+.logo span {
+    font-size: 14px;
+    font-weight: 500;
+    color: #667085;
+    margin-top: 4px;
+}
+
+.brands {
+    display: flex;
+    gap: 25px;
+    align-items: center;
+}
+
+.brands img {
+    height: 42px;
+    object-fit: contain;
+}
+
+/* ===========================
+   HERO
+=========================== */
+
+.hero {
+    width: 92%;
+    margin: auto;
+    margin-top: 20px;
+    background: linear-gradient(135deg, #1565F5, #2D82F7, #5AA6FF);
+    border-radius: 28px;
+    padding: 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+}
+
+.hero-left {
+    width: 58%;
+}
+
+.tag {
+    display: inline-block;
+    background: rgba(255,255,255,.20);
+    padding: 10px 18px;
+    border-radius: 40px;
+    font-size: 14px;
+    margin-bottom: 22px;
+}
+
+.hero h1 {
+    font-size: 60px;
+    line-height: 1.05;
+    margin-bottom: 20px;
+}
+
+.hero p {
+    font-size: 21px;
+    line-height: 1.8;
+    color: #eef4ff;
+    max-width: 650px;
+}
+
+.buttons {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.primary, .secondary {
+    padding: 16px 32px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.primary {
+    background: white;
+    color: #1565F5;
+}
+
+.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0,0,0,.15);
+}
+
+.secondary {
+    background: rgba(255,255,255,.2);
+    color: white;
+    border: 2px solid white;
+}
+
+.secondary:hover {
+    background: white;
+    color: #1565F5;
+}
+
+.hero-right {
+    width: 35%;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.brand-box {
+    background: white;
+    border-radius: 18px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,.15);
+}
+
+.brand-box img {
+    height: 100px;
+    object-fit: contain;
+}
+
+/* ===========================
+   APPLIANCES SECTION
+=========================== */
+
+.appliances {
+    width: 92%;
+    margin: 80px auto;
+}
+
+.appliances h2 {
+    text-align: center;
+    font-size: 48px;
+    margin-bottom: 50px;
+    color: #1d2939;
+}
+
+.appliances-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+}
+
+.appliance-card {
+    background: white;
+    border-radius: 18px;
+    padding: 40px;
+    text-align: center;
+    box-shadow: 0 8px 25px rgba(0,0,0,.08);
+    transition: all 0.3s ease;
+}
+
+.appliance-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 40px rgba(0,0,0,.15);
+}
+
+.appliance-card .icon {
+    font-size: 60px;
+    margin-bottom: 20px;
+}
+
+.appliance-card h3 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #1565F5;
+}
+
+.appliance-card ul {
+    list-style: none;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.appliance-card li {
+    color: #667085;
+    font-size: 15px;
+}
+
+/* ===========================
+   HOW IT WORKS
+=========================== */
+
+.how-it-works {
+    width: 92%;
+    margin: 80px auto;
+}
+
+.how-it-works h2 {
+    text-align: center;
+    font-size: 48px;
+    margin-bottom: 60px;
+    color: #1d2939;
+}
+
+.steps-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 25px;
+}
+
+.step {
+    text-align: center;
+}
+
+.step-number {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #1565F5, #2D82F7);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0 auto 20px;
+}
+
+.step h3 {
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: #1d2939;
+}
+
+.step p {
+    color: #667085;
+    font-size: 15px;
+}
+
+/* ===========================
+   WHY CHOOSE
+=========================== */
+
+.why-choose {
+    width: 92%;
+    margin: 80px auto;
+}
+
+.why-choose h2 {
+    text-align: center;
+    font-size: 48px;
+    margin-bottom: 50px;
+    color: #1d2939;
+}
+
+.benefits-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 25px;
+}
+
+.benefit-card {
+    background: white;
+    border-radius: 18px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 8px 25px rgba(0,0,0,.08);
+}
+
+.benefit-icon {
+    font-size: 50px;
+    margin-bottom: 15px;
+}
+
+.benefit-card h3 {
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: #1d2939;
+}
+
+.benefit-card p {
+    color: #667085;
+    font-size: 14px;
+}
+
+/* ===========================
+   FOOTER
+=========================== */
+
+footer {
+    text-align: center;
+    padding: 40px 20px;
+    background: #ffffff;
+    color: #667085;
+    margin-top: 80px;
+    border-top: 1px solid #e8ebf0;
+}
+
+/* ===========================
+   CHAT MODAL (POPUP)
+=========================== */
+
+.chat-modal {
+    display: none;
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 420px;
+    height: 600px;
+    background: white;
+    border-radius: 18px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.3);
+    z-index: 1000;
+    flex-direction: column;
+    animation: slideUp 0.3s ease;
+}
+
+.chat-modal.show {
+    display: flex;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.chat-modal-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.chat-header {
+    background: linear-gradient(135deg, #1565F5, #2D82F7);
+    color: white;
+    padding: 20px;
+    border-radius: 18px 18px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chat-header h2 {
+    font-size: 20px;
+    margin: 0;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 28px;
+    cursor: pointer;
+    padding: 0;
+}
+
+.close-btn:hover {
+    opacity: 0.8;
+}
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.chat-message {
+    display: flex;
+    margin-bottom: 8px;
+}
+
+.chat-message.user {
+    justify-content: flex-end;
+}
+
+.chat-message.user .message-bubble {
+    background: linear-gradient(135deg, #1565F5, #2D82F7);
+    color: white;
+}
+
+.chat-message.assistant {
+    justify-content: flex-start;
+}
+
+.chat-message.assistant .message-bubble {
+    background: #f0f2f5;
+    color: #1d2939;
+}
+
+.message-bubble {
+    padding: 10px 14px;
+    border-radius: 12px;
+    max-width: 85%;
+    word-wrap: break-word;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.message-bubble p {
+    margin: 0;
+}
+
+.chat-input-area {
+    padding: 15px;
+    border-top: 1px solid #e8ebf0;
+    display: flex;
+    gap: 10px;
+}
+
+#message-input {
+    flex: 1;
+    border: 2px solid #e8ebf0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-family: 'Poppins', sans-serif;
+    transition: border-color 0.2s ease;
+}
+
+#message-input:focus {
+    outline: none;
+    border-color: #1565F5;
+}
+
+.send-btn {
+    background: linear-gradient(135deg, #1565F5, #2D82F7);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.send-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(21, 101, 245, 0.3);
+}
+
+.loading-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    color: #1565F5;
+    font-size: 13px;
+}
+
+.spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid #e8ebf0;
+    border-top-color: #1565F5;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ===========================
+   MODAL (CITATIONS)
+=========================== */
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 18px;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,.3);
+}
+
+.modal-close {
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #667085;
+}
+
+.modal-close:hover {
+    color: #1d2939;
+}
+
+#citation-title {
+    margin: 20px 0 15px;
+    color: #1565F5;
+    clear: both;
+}
+
+#citation-body {
+    line-height: 1.6;
+    color: #1d2939;
+    margin-bottom: 20px;
+}
+
+.modal-link {
+    display: inline-block;
+    background: linear-gradient(135deg, #1565F5, #2D82F7);
+    color: white;
+    padding: 10px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.modal-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(21, 101, 245, 0.3);
+}
+
+/* ===========================
+   RESPONSIVE
+=========================== */
+
+@media (max-width: 768px) {
+    .hero {
+        flex-direction: column;
+        padding: 40px;
+    }
+
+    .hero-left, .hero-right {
+        width: 100%;
+    }
+
+    .hero h1 {
+        font-size: 40px;
+    }
+
+    .appliances-grid, .steps-grid, .benefits-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .chat-modal {
+        width: calc(100% - 20px);
+        height: calc(100vh - 60px);
+        bottom: 10px;
+        right: 10px;
+        left: 10px;
+    }
+}
