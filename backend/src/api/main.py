@@ -119,14 +119,14 @@ MAX_DIAGNOSTIC_QUESTIONS = 5
 def _infer_appliance_category(text: str) -> Optional[str]:
     """Return the appliance category named in a query or conversation."""
     text = text.lower()
-    category_keywords = {
-        "washer": ["washer", "washing machine"],
-        "dishwasher": ["dishwasher"],
-        "refrigerator": ["refrigerator", "refrigirator", "fridge", "fidge", "freezer"],
-    }
-    for category, keywords in category_keywords.items():
-        if any(keyword in text for keyword in keywords):
-            return category
+    # Check in order of specificity (longer keywords first)
+    # IMPORTANT: Check "dishwasher" before "washer" because "washer" is in "dishwasher"
+    if any(keyword in text for keyword in ["dishwasher"]):
+        return "dishwasher"
+    if any(keyword in text for keyword in ["refrigerator", "refrigirator", "fridge", "fidge", "freezer"]):
+        return "refrigerator"
+    if any(keyword in text for keyword in ["washer", "washing machine"]):
+        return "washer"
     return None
 
 

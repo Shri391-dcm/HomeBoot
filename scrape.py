@@ -117,10 +117,23 @@ def infer_category_from_url(url: str) -> str:
 
 def _in_category_links(base_url: str, html: str, category: str) -> list[str]:
     """Follow only links that look like troubleshooting/support pages on
-    the same domain and likely belong to the target category."""
+    the same domain and likely belong to the target category.
+    
+    NOTE: After discovering cross-category contamination, we now enforce
+    strict filtering, especially for GE pages which have messy linking.
+    """
     soup = BeautifulSoup(html, "html.parser")
     domain = urlparse(base_url).netloc
     links = []
+    
+    # Category keywords for strict filtering on ambiguous domains
+    category_keywords = {
+        "washer": ["washer", "dryer", "laundry", "washing", "drying"],
+        "refrigerator": ["refrigerator", "freezer", "fridge", "cooling"],
+        "dishwasher": ["dishwasher", "dish", "washing"],
+    }
+    required_keywords = category_keywords.get(category, [])
+    
     for a in soup.find_all("a", href=True):
         href = urljoin(base_url, a["href"])
         parsed = urlparse(href)
@@ -128,8 +141,19 @@ def _in_category_links(base_url: str, html: str, category: str) -> list[str]:
             continue
         path_lower = parsed.path.lower()
         inferred_category = infer_category_from_url(href)
+        
+        # STRICT: If we can infer a category and it differs, skip immediately
         if inferred_category and inferred_category != category:
             continue
+        
+        # For GE pages specifically, be extra strict: require explicit category mention
+        # This prevents product showcase pages from leaking into wrong categories
+        if domain == "geappliances.com" or domain == "www.geappliances.com":
+            if not any(kw in path_lower for kw in required_keywords):
+                # Skip if category keywords not found in URL
+                continue
+        
+        # Check if link looks like support/documentation content
         if any(k in path_lower for k in ["troubleshoot", "support", "error", "manual", "guide",
                                             "laundry", "washer", "kitchen", "dishwasher",
                                             "refrigerat", "service-and-support",
@@ -137,6 +161,7 @@ def _in_category_links(base_url: str, html: str, category: str) -> list[str]:
                                             "product_info", "faq",
                                             "gea-support"]):
             links.append(href.split("#")[0])
+    
     return list(dict.fromkeys(links))  # de-dupe, keep order
 
 
