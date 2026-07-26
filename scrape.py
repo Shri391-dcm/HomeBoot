@@ -103,10 +103,21 @@ def _save_raw(url: str, content: bytes, is_pdf: bool, brand: str, category: str)
     return str(path)
 
 
-def _in_category_links(base_url: str, html: str) -> list[str]:
+def infer_category_from_url(url: str) -> str:
+    """Infer the appliance category from a URL when possible."""
+    path = urlparse(url).path.lower()
+    if any(k in path for k in ["dishwasher", "dishwashers"]):
+        return "dishwasher"
+    if any(k in path for k in ["refrigerator", "refrigerators", "freezer", "freezers"]):
+        return "refrigerator"
+    if any(k in path for k in ["washer", "laundry", "washers", "dryer", "dryers"]):
+        return "washer"
+    return ""
+
+
+def _in_category_links(base_url: str, html: str, category: str) -> list[str]:
     """Follow only links that look like troubleshooting/support pages on
-    the same domain, so the crawler doesn't wander into unrelated sections
-    of the site (careers, marketing, unrelated appliance types)."""
+    the same domain and likely belong to the target category."""
     soup = BeautifulSoup(html, "html.parser")
     domain = urlparse(base_url).netloc
     links = []
@@ -116,6 +127,9 @@ def _in_category_links(base_url: str, html: str) -> list[str]:
         if parsed.netloc != domain:
             continue
         path_lower = parsed.path.lower()
+        inferred_category = infer_category_from_url(href)
+        if inferred_category and inferred_category != category:
+            continue
         if any(k in path_lower for k in ["troubleshoot", "support", "error", "manual", "guide",
                                             "laundry", "washer", "kitchen", "dishwasher",
                                             "refrigerat", "service-and-support",
@@ -154,7 +168,7 @@ def crawl_category(brand: str, category: str, seeds: list[str]):
         logger.info(f"Saved [{brand}/{category}] {url} -> {local_path}")
 
         if not is_pdf:
-            for link in _in_category_links(url, resp.text):
+            for link in _in_category_links(url, resp.text, category):
                 if link not in visited:
                     queue.append(link)
 
