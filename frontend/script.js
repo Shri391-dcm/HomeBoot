@@ -310,16 +310,8 @@ async function handleSendMessage(e) {
             content: queryResult.answer
         });
 
-        // Display answer
-        addMessage(queryResult.answer, 'assistant');
-        
-        // Display citations if available
-        if (queryResult.citations && queryResult.citations.length > 0) {
-            queryResult.citations.forEach(citation => {
-                const citationText = `📎 ${citation.source || 'Source'}`;
-                addMessage(citationText, 'citation', citation);
-            });
-        }
+        // Display response with answer and citations
+        displayResponse(queryResult);
 
     } catch (error) {
         console.error('Error:', error);
@@ -392,6 +384,10 @@ async function submitClarifiedQuery() {
         }
 
         const result = await response.json();
+        
+        // Debug: Store response in window for inspection
+        window.__lastResponse = result;
+        console.log('Full API response:', JSON.stringify(result, null, 2));
         
         // Add assistant response to conversation history
         conversationState.conversationHistory.push({
@@ -519,6 +515,9 @@ async function loadMockData(question = '') {
 }
 
 function displayResponse(result) {
+    console.log('displayResponse called with result:', result);
+    console.log('Citations array:', result.citations);
+    
     // Handle safety flag
     if (result.safety_flag) {
         const html = `<strong>🚨 Safety Alert:</strong> ${result.safety_message}`;
@@ -540,10 +539,13 @@ function displayResponse(result) {
 
     // Add citations
     if (result.citations && result.citations.length > 0) {
+        console.log('Creating citation HTML for', result.citations.length, 'citations');
         const citationsHtml = result.citations
             .map(c => `<small style="display: block; margin-top: 8px; cursor: pointer; color: #1565F5;" onclick="showCitationModal(${JSON.stringify(c).replace(/"/g, '&quot;')})">📌 Source: ${c.source_url}</small>`)
             .join('');
         addMessage(citationsHtml, 'assistant', true);
+    } else {
+        console.log('No citations found in result');
     }
 }
 

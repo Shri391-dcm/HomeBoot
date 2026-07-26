@@ -125,13 +125,47 @@ def extract_quote_from_passage(passage: str, claim: str) -> str:
     Returns:
         Quote string (max MAX_QUOTE_LENGTH words)
     """
-    # Try to find the claim text in passage
+    MAX_QUOTE_LENGTH = 50
+    
+    # Strategy 1: Try to find the exact claim in passage
     if claim.lower() in passage.lower():
-        # Find exact location
         idx = passage.lower().find(claim.lower())
-        return passage[idx : idx + len(claim)]
-
-    return ""
+        end_idx = idx + len(claim)
+        return passage[idx:end_idx]
+    
+    # Strategy 2: Try to find significant words from the claim in the passage
+    claim_words = [w for w in claim.lower().split() if len(w) > 3]  # Filter out small words
+    if not claim_words:
+        claim_words = claim.lower().split()
+    
+    # Find the passage position where most claim words appear
+    passage_lower = passage.lower()
+    best_pos = -1
+    best_count = 0
+    
+    for i in range(len(passage_lower)):
+        count = 0
+        for word in claim_words[:5]:  # Check first 5 claim words
+            if word in passage_lower[i:i+200]:  # Look ahead 200 chars
+                count += 1
+        if count > best_count:
+            best_count = count
+            best_pos = i
+    
+    # If we found relevant words, extract a quote around that position
+    if best_pos != -1 and best_count >= 1:
+        # Extract words around the best position
+        start_idx = max(0, best_pos)
+        end_idx = min(len(passage), best_pos + 300)
+        quote = passage[start_idx:end_idx]
+        
+        # Trim to word boundaries
+        words = quote.split()[:MAX_QUOTE_LENGTH]
+        return ' '.join(words)
+    
+    # Strategy 3: If still nothing, return first MAX_QUOTE_LENGTH words of passage
+    words = passage.split()[:MAX_QUOTE_LENGTH]
+    return ' '.join(words) if words else ""
 
 
 def validate_citation(citation: Dict, original_passage: str) -> bool:
