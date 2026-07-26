@@ -149,18 +149,47 @@ def _extract_heading_path(body: str) -> str:
     return " > ".join(headings) if headings else ""
 
 
-def _detect_page_type(record: dict, body: str) -> str:
-    """Classify page type for metadata filtering."""
-    if record.get("is_pdf"):
-        return "pdf_manual"
-    if "|---" in body:
-        return "table_page"
-    url_lower = record["url"].lower()
-    if "faq" in url_lower:
-        return "faq"
-    if "error" in url_lower or "troubleshoot" in url_lower:
+def _detect_support_type(record: dict, body: str) -> str:
+    """Classify page into a specific support type for retrieval filtering.
+    Uses URL path, title, and body content signals."""
+    url_lower = record.get("url", "").lower()
+    body_lower = body.lower()
+    title_lower = (record.get("title") or "").lower()
+    combined = f"{url_lower} {title_lower} {body_lower[:1000]}"
+
+    # Order matters: more specific matches first
+    if any(k in combined for k in ["error_code", "error code", "flashing_light", "blinking",
+                                     "f1", "f2", "f3", "f5", "f7", "e1", "e2"]):
+        return "error_code"
+    if any(k in combined for k in ["install", "hook up", "hookup", "set up", "setup",
+                                     "level the", "connect the"]):
+        return "installation"
+    if any(k in combined for k in ["troubleshoot", "not working", "won't", "does not",
+                                     "will not", "problem", "issue", "diagnos"]):
         return "troubleshooting"
-    return "support_article"
+    if any(k in combined for k in ["clean", "maintenance", "care", "descale", "filter",
+                                     "affresh", "deodor"]):
+        return "maintenance"
+    if any(k in combined for k in ["warranty", "service plan", "extended service",
+                                     "coverage", "protection"]):
+        return "warranty"
+    if any(k in combined for k in ["part", "replace", "order", "accessori"]):
+        return "parts"
+    if any(k in combined for k in ["safety", "hazard", "caution", "warning label", "recall"]):
+        return "safety"
+    if any(k in combined for k in ["spec", "dimension", "capacity", "weight", "energy",
+                                     "ampere", "voltage", "btu"]):
+        return "specifications"
+    if any(k in combined for k in ["manual", "owner", "literature", "guide", "pdf"]):
+        return "manual"
+    if record.get("is_pdf"):
+        return "manual"
+    if any(k in combined for k in ["how to", "usage", "cycle", "setting", "option",
+                                     "feature", "operation", "load", "dispenser"]):
+        return "usage"
+    if "faq" in combined:
+        return "faq"
+    return "general_support"
 
 
 def process_record(record: dict):
@@ -198,7 +227,7 @@ def process_record(record: dict):
             "extracted_path": str(out_path),
             "title": title,
             "heading_path": _extract_heading_path(body),
-            "page_type": _detect_page_type(record, body),
+            "page_type": _detect_support_type(record, body),
             "has_table": "|---" in body,
             "content_hash": body_hash,
             "crawl_timestamp": record.get("scraped_at", ""),

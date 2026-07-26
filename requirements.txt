@@ -1,6 +1,21 @@
+# Data Pipeline (scraping, extraction, chunking)
 requests>=2.31
 beautifulsoup4>=4.12
 trafilatura>=1.8
 pymupdf>=1.24
 pdfplumber>=0.11
 certifi>=2024.2.2
+pytest>=7.0
+
+# RAG Retrieval Pipeline (Medha/Sanjana)
+chromadb==1.5.9
+rank-bm25==0.2.2
+sentence-transformers==5.1.2
+scikit-learn==1.6.1
+numpy==2.0.2
+
+# Backend API (Manisha)
+fastapi==0.104.1
+uvicorn==0.24.0
+pydantic==2.5.0
+python-dotenv==1.0.0

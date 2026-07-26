@@ -119,7 +119,9 @@ def process_record(record: dict):
     append_jsonl(NORMALIZED_MANIFEST, {
         "url": url, "brand": record["brand"], "category": record["category"],
         "normalized_path": str(out_path), "title": record.get("title", ""),
-        "has_table": record.get("has_table", False), "status": "ok",
+        "has_table": record.get("has_table", False),
+        "page_type": record.get("page_type", "general_support"),
+        "status": "ok",
     })
     logger.info(f"Normalized {url} -> {out_path}")
 

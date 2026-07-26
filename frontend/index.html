@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Appliance AI Support Assistant</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+<!-- ================= NAVBAR ================= -->
+<nav>
+    <div class="logo">
+        🏠 ApplianceAI
+        <span>Home Appliance AI Support Assistant</span>
+    </div>
+    <div class="brands">
+        <img src="assets/Whirlpool.jpg" alt="Whirlpool">
+        <img src="assets/GE.png" alt="GE">
+    </div>
+</nav>
+
+<!-- ================= HERO ================= -->
+<section class="hero">
+    <div class="hero-left">
+        <div class="tag">✨ Retrieval-Augmented Generation</div>
+        <h1>AI-powered Home Appliance Support</h1>
+        <p>Get accurate troubleshooting, maintenance guides, installation help and appliance information directly from official Whirlpool and GE documentation.</p>
+        <div class="buttons">
+            <button id="start-chat-btn" class="primary">🚀 Start Chat</button>
+            <a href="#features" class="secondary">Learn More</a>
+        </div>
+    </div>
+    <div class="hero-right">
+        <div class="brand-box">
+            <img src="assets/Whirlpool.jpg" alt="Whirlpool">
+        </div>
+        <div class="brand-box">
+            <img src="assets/GE.png" alt="GE">
+        </div>
+    </div>
+</section>
+
+<!-- ================= SUPPORTED APPLIANCES ================= -->
+<section id="features" class="appliances">
+    <h2>Supported Appliances</h2>
+    <div class="appliances-grid">
+        <div class="appliance-card">
+            <div class="icon">👕</div>
+            <h3>Washing Machines</h3>
+            <ul>
+                <li>Error Codes</li>
+                <li>Installation</li>
+                <li>Maintenance</li>
+                <li>Troubleshooting</li>
+            </ul>
+        </div>
+        <div class="appliance-card">
+            <div class="icon">❄️</div>
+            <h3>Refrigerators</h3>
+            <ul>
+                <li>Cooling Issues</li>
+                <li>Ice Maker</li>
+                <li>Water Filter</li>
+                <li>Temperature Settings</li>
+            </ul>
+        </div>
+        <div class="appliance-card">
+            <div class="icon">🍽️</div>
+            <h3>Dishwashers</h3>
+            <ul>
+                <li>Cleaning Cycles</li>
+                <li>Drain Problems</li>
+                <li>Installation</li>
+                <li>Error Messages</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<!-- ================= HOW IT WORKS ================= -->
+<section class="how-it-works">
+    <h2>How ApplianceAI Works</h2>
+    <div class="steps-grid">
+        <div class="step">
+            <div class="step-number">1</div>
+            <h3>Ask Your Question</h3>
+            <p>Type your appliance issue or question</p>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <h3>Smart Retrieval</h3>
+            <p>Our system finds relevant information from official docs</p>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <h3>AI Generation</h3>
+            <p>Get accurate, grounded answers with citations</p>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <h3>Trusted Sources</h3>
+            <p>All answers backed by official manufacturer documentation</p>
+        </div>
+    </div>
+</section>
+
+<!-- ================= WHY CHOOSE ================= -->
+<section class="why-choose">
+    <h2>Why Choose ApplianceAI?</h2>
+    <div class="benefits-grid">
+        <div class="benefit-card">
+            <div class="benefit-icon">📄</div>
+            <h3>Official Documentation</h3>
+            <p>Answers from verified Whirlpool & GE sources</p>
+        </div>
+        <div class="benefit-card">
+            <div class="benefit-icon">🔍</div>
+            <h3>Accurate & Detailed</h3>
+            <p>Always cited, never hallucinated</p>
+        </div>
+        <div class="benefit-card">
+            <div class="benefit-icon">🤖</div>
+            <h3>AI-Powered</h3>
+            <p>Smart retrieval + generation = better answers</p>
+        </div>
+        <div class="benefit-card">
+            <div class="benefit-icon">✅</div>
+            <h3>Verified Safe</h3>
+            <p>Safety checks for critical appliance issues</p>
+        </div>
+    </div>
+</section>
+
+<!-- ================= CHAT MODAL (POPUP) ================= -->
+<div id="chat-modal" class="chat-modal">
+    <div class="chat-modal-content">
+        <!-- Chat Header -->
+        <div class="chat-header">
+            <h2>ApplianceAI Chat</h2>
+            <button id="close-chat-btn" class="close-btn">&times;</button>
+        </div>
+
+        <!-- Chat Messages -->
+        <div class="chat-messages" id="chat-messages">
+            <div class="chat-message assistant">
+                <div class="message-bubble">
+                    <p>👋 Hi! I'm ApplianceAI. Ask me anything about your Whirlpool or GE appliances!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Input -->
+        <form id="chat-form" class="chat-input-area">
+            <input 
+                type="text" 
+                id="message-input" 
+                placeholder="Ask about your appliance..."
+                autocomplete="off"
+            >
+            <button type="submit" class="send-btn">Send</button>
+        </form>
+
+        <div id="loading-indicator" class="loading-indicator" style="display: none;">
+            <span class="spinner"></span> Processing...
+        </div>
+    </div>
+</div>
+
+<!-- ================= CITATION MODAL ================= -->
+<div id="citation-modal" class="modal">
+    <div class="modal-content">
+        <span class="modal-close">&times;</span>
+        <h3 id="citation-title"></h3>
+        <p id="citation-body"></p>
+        <a id="citation-link" class="modal-link" target="_blank">View full page →</a>
+    </div>
+</div>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+    <p>&copy; 2024 ApplianceAI. Powered by Retrieval-Augmented Generation.</p>
+</footer>
+
+<script src="script.js?v=conversation-v3"></script>
+
+</body>
+
+</html>

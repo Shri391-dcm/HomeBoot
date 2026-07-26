@@ -23,9 +23,11 @@ import argparse
 import json
 from pathlib import Path
 
-from config import NORMALIZED_DIR, CHUNKS_DIR, LOG_DIR, FIXED_CHUNK_TOKENS, FIXED_CHUNK_OVERLAP, WORDS_PER_TOKEN
+from config import (NORMALIZED_DIR, CHUNKS_DIR, LOG_DIR, FIXED_CHUNK_TOKENS,
+                    FIXED_CHUNK_OVERLAP, WORDS_PER_TOKEN, MIN_CHUNK_TOKENS,
+                    MAX_CHUNK_TOKENS, NEAR_DEDUP_THRESHOLD)
 from clean import build_heading_index
-from utils import chunk_id, get_logger, read_jsonl
+from utils import chunk_id, get_logger, read_jsonl, content_hash
 
 logger = get_logger("chunk", LOG_DIR)
 NORMALIZED_MANIFEST = NORMALIZED_DIR / "manifest.jsonl"
@@ -33,6 +35,8 @@ CHUNKS_PATH = CHUNKS_DIR / "chunks.jsonl"
 
 WORDS_PER_CHUNK = int(FIXED_CHUNK_TOKENS * WORDS_PER_TOKEN)
 OVERLAP_WORDS = int(FIXED_CHUNK_OVERLAP * WORDS_PER_TOKEN)
+MIN_WORDS = int(MIN_CHUNK_TOKENS * WORDS_PER_TOKEN)
+MAX_WORDS = int(MAX_CHUNK_TOKENS * WORDS_PER_TOKEN)
 
 
 def fixed_chunks(text: str, url: str, meta: dict) -> list[dict]:
@@ -69,18 +73,51 @@ def structure_aware_chunks(text: str, url: str, meta: dict) -> list[dict]:
         if item["text"].strip():
             sections[path].append(item["text"])
 
-    chunks = []
+    raw_chunks = []
     for index, path in enumerate(order):
         section_text = "\n".join(sections[path]).strip()
         if not section_text:
             continue
-        chunks.append({
-            "chunk_id": chunk_id(url, path, index),
-            "text": section_text,
-            "strategy": "structure_aware",
-            "heading_path": path,
-            **meta,
-        })
+        raw_chunks.append((path, section_text, index))
+
+    # Merge tiny sections into their predecessor
+    merged = []
+    for path, section_text, index in raw_chunks:
+        if merged and len(section_text.split()) < MIN_WORDS:
+            prev_path, prev_text, prev_idx = merged[-1]
+            merged[-1] = (prev_path, prev_text + "\n" + section_text, prev_idx)
+        else:
+            merged.append((path, section_text, index))
+
+    # Sub-split oversized sections with fixed windowing
+    chunks = []
+    for path, section_text, index in merged:
+        words = section_text.split()
+        if len(words) <= MAX_WORDS:
+            chunks.append({
+                "chunk_id": chunk_id(url, path, index),
+                "text": section_text,
+                "strategy": "structure_aware",
+                "heading_path": path,
+                **meta,
+            })
+        else:
+            sub_idx = 0
+            start = 0
+            while start < len(words):
+                end = min(start + WORDS_PER_CHUNK, len(words))
+                chunk_text = " ".join(words[start:end])
+                chunks.append({
+                    "chunk_id": chunk_id(url, f"{path}__sub{sub_idx}", index),
+                    "text": chunk_text,
+                    "strategy": "structure_aware",
+                    "heading_path": path,
+                    **meta,
+                })
+                sub_idx += 1
+                if end == len(words):
+                    break
+                start = end - OVERLAP_WORDS
     return chunks
 
 
@@ -111,11 +148,24 @@ def build(strategy_filter: str | None = None):
 
     new_chunks = []
     for record in records:
-        text = Path(record["normalized_path"]).read_text(encoding="utf-8")
+        # Resolve path: if absolute path doesn't exist, reconstruct from relative path
+        normalized_path = Path(record["normalized_path"])
+        if not normalized_path.exists():
+            # Extract filename from the old path and reconstruct using current project root
+            old_path = Path(record["normalized_path"])
+            filename = old_path.name  # e.g., "557f1b030619b0e9.md"
+            normalized_path = NORMALIZED_DIR / record["brand"] / record["category"] / filename
+        
+        if not normalized_path.exists():
+            logger.warning(f"Normalized file not found: {normalized_path}, skipping")
+            continue
+            
+        text = normalized_path.read_text(encoding="utf-8")
         url = record["url"]
         meta = {
             "url": url, "brand": record["brand"], "category": record["category"],
             "title": record.get("title", ""), "has_table": record.get("has_table", False),
+            "page_type": record.get("page_type", "general_support"),
         }
         if strategy_filter in (None, "fixed"):
             new_chunks.extend(fixed_chunks(text, url, meta))
@@ -123,6 +173,36 @@ def build(strategy_filter: str | None = None):
             new_chunks.extend(structure_aware_chunks(text, url, meta))
 
     all_chunks = kept + new_chunks
+
+    # --- Near-duplicate removal (Jaccard on word shingles) ----------------
+    def _shingles(text, k=5):
+        words = text.lower().split()
+        return set(" ".join(words[i:i+k]) for i in range(max(len(words)-k+1, 1)))
+
+    seen_hashes = set()
+    deduped = []
+    for c in all_chunks:
+        h = content_hash(c["text"].encode("utf-8"))
+        if h in seen_hashes:
+            continue
+        seen_hashes.add(h)
+        # Check Jaccard similarity against recent chunks (window of 50)
+        c_shingles = _shingles(c["text"])
+        is_near_dup = False
+        for prev in deduped[-50:]:
+            prev_shingles = _shingles(prev["text"])
+            if c_shingles and prev_shingles:
+                jaccard = len(c_shingles & prev_shingles) / len(c_shingles | prev_shingles)
+                if jaccard >= NEAR_DEDUP_THRESHOLD:
+                    is_near_dup = True
+                    break
+        if not is_near_dup:
+            deduped.append(c)
+
+    removed = len(all_chunks) - len(deduped)
+    if removed:
+        logger.info(f"Near-dedup removed {removed} chunks (Jaccard >= {NEAR_DEDUP_THRESHOLD})")
+    all_chunks = deduped
     _write_chunks(all_chunks)
 
     # Orphan check: every chunk ID in the file should trace back to a URL

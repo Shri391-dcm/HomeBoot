@@ -257,3 +257,18 @@ id_ed25519
 .pypirc
 credentials.json
 token.json
+# === HomeBoot RAG Retrieval ===
+
+# ChromaDB generated vector database
+data/vector_db/
+
+# Generated chunk files
+data/chunks/*.jsonl
+data/chunks/mock_chunks.json
+
+# HuggingFace model cache
+.cache/
+huggingface/
+
+# Editor backup files
+*.save

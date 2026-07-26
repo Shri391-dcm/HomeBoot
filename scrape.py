@@ -103,19 +103,57 @@ def _save_raw(url: str, content: bytes, is_pdf: bool, brand: str, category: str)
     return str(path)
 
 
-def _in_category_links(base_url: str, html: str) -> list[str]:
+def infer_category_from_url(url: str) -> str:
+    """Infer the appliance category from a URL when possible."""
+    path = urlparse(url).path.lower()
+    if any(k in path for k in ["dishwasher", "dishwashers"]):
+        return "dishwasher"
+    if any(k in path for k in ["refrigerator", "refrigerators", "freezer", "freezers"]):
+        return "refrigerator"
+    if any(k in path for k in ["washer", "laundry", "washers", "dryer", "dryers"]):
+        return "washer"
+    return ""
+
+
+def _in_category_links(base_url: str, html: str, category: str) -> list[str]:
     """Follow only links that look like troubleshooting/support pages on
-    the same domain, so the crawler doesn't wander into unrelated sections
-    of the site (careers, marketing, unrelated appliance types)."""
+    the same domain and likely belong to the target category.
+    
+    NOTE: After discovering cross-category contamination, we now enforce
+    strict filtering, especially for GE pages which have messy linking.
+    """
     soup = BeautifulSoup(html, "html.parser")
     domain = urlparse(base_url).netloc
     links = []
+    
+    # Category keywords for strict filtering on ambiguous domains
+    category_keywords = {
+        "washer": ["washer", "dryer", "laundry", "washing", "drying"],
+        "refrigerator": ["refrigerator", "freezer", "fridge", "cooling"],
+        "dishwasher": ["dishwasher", "dish", "washing"],
+    }
+    required_keywords = category_keywords.get(category, [])
+    
     for a in soup.find_all("a", href=True):
         href = urljoin(base_url, a["href"])
         parsed = urlparse(href)
         if parsed.netloc != domain:
             continue
         path_lower = parsed.path.lower()
+        inferred_category = infer_category_from_url(href)
+        
+        # STRICT: If we can infer a category and it differs, skip immediately
+        if inferred_category and inferred_category != category:
+            continue
+        
+        # For GE pages specifically, be extra strict: require explicit category mention
+        # This prevents product showcase pages from leaking into wrong categories
+        if domain == "geappliances.com" or domain == "www.geappliances.com":
+            if not any(kw in path_lower for kw in required_keywords):
+                # Skip if category keywords not found in URL
+                continue
+        
+        # Check if link looks like support/documentation content
         if any(k in path_lower for k in ["troubleshoot", "support", "error", "manual", "guide",
                                             "laundry", "washer", "kitchen", "dishwasher",
                                             "refrigerat", "service-and-support",
@@ -123,6 +161,7 @@ def _in_category_links(base_url: str, html: str) -> list[str]:
                                             "product_info", "faq",
                                             "gea-support"]):
             links.append(href.split("#")[0])
+    
     return list(dict.fromkeys(links))  # de-dupe, keep order
 
 
@@ -154,7 +193,7 @@ def crawl_category(brand: str, category: str, seeds: list[str]):
         logger.info(f"Saved [{brand}/{category}] {url} -> {local_path}")
 
         if not is_pdf:
-            for link in _in_category_links(url, resp.text):
+            for link in _in_category_links(url, resp.text, category):
                 if link not in visited:
                     queue.append(link)
 
