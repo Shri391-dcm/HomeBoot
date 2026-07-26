@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from utils import content_hash, already_processed, append_jsonl, read_jsonl
 from extract import _detect_support_type
+from scrape import infer_category_from_url
 
 
 # ─── Deduplication Tests ────────────────────────────────────────────────────
@@ -50,6 +51,22 @@ class TestAlreadyProcessed:
         manifest = tmp_path / "manifest.jsonl"
         append_jsonl(manifest, {"url": "http://example.com/other", "status": "ok"})
         assert already_processed(manifest, "http://example.com/page") is False
+
+
+# ─── Category inference tests ─────────────────────────────────────────────
+
+class TestCategoryInference:
+    def test_ge_refrigerator_url_infers_refrigerator(self):
+        url = "https://www.geappliances.com/ge-appliances/kitchen/refrigerators/french-door-refrigerators/"
+        assert infer_category_from_url(url) == "refrigerator"
+
+    def test_ge_dishwasher_url_infers_dishwasher(self):
+        url = "https://www.geappliances.com/ge/service-and-support/faq-dishwasher.htm"
+        assert infer_category_from_url(url) == "dishwasher"
+
+    def test_whirlpool_washer_url_infers_washer(self):
+        url = "https://producthelp.whirlpool.com/Laundry/Washers"
+        assert infer_category_from_url(url) == "washer"
 
 
 # ─── Support Type Classification Tests ──────────────────────────────────────
