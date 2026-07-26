@@ -5,15 +5,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict, Optional
 import logging
-import os
-from pathlib import Path
 
 from backend.src.generation import generate_answer, extract_citations
 from backend.src.refusal import should_refuse
 from backend.src.safety import detect_safety_issue
 
-# Import real retrieval components
-from retrieval import HybridSearch, VectorStore, BM25Search, Reranker, CrossEncoderReranker
+# Import fresh retrieval pipeline
+from retrieval.retrieve import retrieve_documents
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -37,92 +35,9 @@ app.add_middleware(
 
 
 # ============================================================================
-# Initialization: Setup Retrieval Pipeline
+# Initialization: Retrieval pipeline initialized in retrieval/retrieve.py
 # ============================================================================
-
-# Initialize retrieval system at startup
-_retrieval_system = None
-_vector_store = None
-_bm25_search = None
-_reranker = None
-
-def _init_retrieval():
-    """Initialize real retrieval pipeline."""
-    global _retrieval_system, _vector_store, _bm25_search, _reranker
-    
-    try:
-        # Build paths - go up from backend/src/api/main.py to project root
-        project_root = Path(__file__).parent.parent.parent.parent  # /Users/manisha/project/HomeBoot
-        data_dir = project_root / "data"
-        db_path = project_root / "data" / "vector_db"
-        
-        # Initialize vector store with ChromaDB
-        logger.info("Initializing vector store from ChromaDB...")
-        import chromadb
-        chroma_client = chromadb.PersistentClient(path=str(db_path))
-        chroma_collection = chroma_client.get_collection(name="homeboot_chunks")
-        
-        # Wrap ChromaDB as dense search
-        class ChromaDBSearch:
-            def __init__(self, collection):
-                self.collection = collection
-            
-            def search(self, query_vector, top_k=20):
-                """Search ChromaDB with query vector."""
-                results = self.collection.query(
-                    query_embeddings=[query_vector],
-                    n_results=top_k,
-                    include=["documents", "metadatas", "distances"]
-                )
-                
-                if not results or not results["ids"][0]:
-                    return []
-                
-                # Convert distances to similarity scores (0-1 range)
-                # Chroma returns distances, so convert: similarity = 1 / (1 + distance)
-                output = []
-                for i, chunk_id in enumerate(results["ids"][0]):
-                    distance = results["distances"][0][i]
-                    similarity = 1.0 / (1.0 + distance)  # Convert distance to similarity
-                    output.append({
-                        "id": chunk_id,
-                        "text": results["documents"][0][i],
-                        "metadata": results["metadatas"][0][i],
-                        "score": similarity
-                    })
-                return output
-        
-        _vector_store = ChromaDBSearch(chroma_collection)
-        
-        # Initialize BM25 (sparse search) - load chunks from JSONL
-        logger.info("Initializing BM25 search...")
-        chunks_file = project_root / "data" / "chunks" / "chunks.jsonl"
-        chunks = []
-        with open(chunks_file, "r", encoding="utf-8") as f:
-            import json
-            for line in f:
-                chunks.append(json.loads(line))
-        _bm25_search = BM25Search(chunks)
-        
-        # Initialize reranker
-        logger.info("Initializing reranker...")
-        _reranker = CrossEncoderReranker()
-        
-        # Create hybrid search
-        logger.info("Creating hybrid search...")
-        _retrieval_system = HybridSearch(
-            dense_search=_vector_store,
-            bm25_search=_bm25_search,
-            dense_weight=0.6,
-            sparse_weight=0.4
-        )
-        
-        logger.info("✅ Retrieval system initialized successfully")
-        
-    except Exception as e:
-        logger.warning(f"⚠️ Failed to initialize retrieval: {e}")
-        logger.warning("System will run without real retrieval - check embeddings and data paths")
-        _retrieval_system = None
+# Fresh retrieval is performed for every user query via retrieve_documents()
 
 
 # ============================================================================
@@ -146,6 +61,7 @@ class QueryRequest(BaseModel):
     """Request body for /query endpoint."""
     query: str
     top_k: Optional[int] = 10
+    conversation_history: Optional[List[Dict[str, str]]] = None  # List of {"role": "user"|"assistant", "content": "..."}
 
 
 class Citation(BaseModel):
@@ -186,9 +102,107 @@ class RetrieveResponse(BaseModel):
     total_found: int
 
 
+class ClarifyResponse(BaseModel):
+    """Response from /clarify endpoint."""
+    needs_clarification: bool
+    message: str
+    suggestions: Optional[List[str]] = None
+
+
 # ============================================================================
 # Helper Functions
 # ============================================================================
+
+MAX_DIAGNOSTIC_QUESTIONS = 5
+
+
+def _infer_appliance_category(text: str) -> Optional[str]:
+    """Return the appliance category named in a query or conversation."""
+    text = text.lower()
+    category_keywords = {
+        "washer": ["washer", "washing machine"],
+        "dishwasher": ["dishwasher"],
+        "refrigerator": ["refrigerator", "refrigirator", "fridge", "fidge", "freezer"],
+    }
+    for category, keywords in category_keywords.items():
+        if any(keyword in text for keyword in keywords):
+            return category
+    return None
+
+
+def _infer_brand(text: str) -> Optional[str]:
+    """Return the supported appliance brand named in a query or conversation."""
+    normalized_text = "".join(
+        character if character.isalnum() else " " for character in text.lower()
+    )
+    if "whirlpool" in normalized_text:
+        return "whirlpool"
+    if any(
+        keyword in f" {normalized_text} "
+        for keyword in ["ge appliances", "general electric", "ge"]
+    ):
+        return "ge"
+    return None
+
+
+def _starts_new_appliance_issue(query: str) -> bool:
+    """Identify a standalone appliance problem rather than a short follow-up."""
+    problem_keywords = [
+        "not working",
+        "not cooling",
+        "not draining",
+        "not starting",
+        "leaking",
+        "broken",
+        "problem",
+        "issue",
+    ]
+    query_lower = query.lower()
+    return (
+        _infer_appliance_category(query) is not None
+        and any(keyword in query_lower for keyword in problem_keywords)
+    )
+
+
+def _starts_new_appliance_topic(query: str) -> bool:
+    """Identify a full appliance question that must not inherit old context."""
+    topic_keywords = [
+        "how", "what", "when", "where", "why", "can", "should",
+        "move", "install", "clean", "repair", "replace", "prepare",
+        "safe", "safely", "maintenance",
+    ]
+    query_lower = query.lower()
+    return (
+        _infer_appliance_category(query) is not None
+        and len(query.split()) >= 3
+        and (
+            any(keyword in query_lower for keyword in topic_keywords)
+            or _starts_new_appliance_issue(query)
+        )
+    )
+
+
+def _changes_appliance_category(query: str, history: Optional[List[Dict[str, str]]]) -> bool:
+    """Return whether a new query names a different appliance than its history."""
+    query_category = _infer_appliance_category(query)
+    history_category = _infer_appliance_category(
+        " ".join(message.get("content", "") for message in history or [])
+    )
+    return query_category is not None and history_category is not None and query_category != history_category
+
+
+def _needs_brand_clarification(query: str, history: Optional[List[Dict[str, str]]] = None) -> bool:
+    """Require a brand before starting a new appliance diagnosis."""
+    conversation_text = " ".join(
+        message.get("content", "") for message in history or []
+    )
+    combined_text = f"{query} {conversation_text}"
+    return _infer_appliance_category(combined_text) is not None and _infer_brand(combined_text) is None
+
+
+def _needs_product_specifications(query: str, history: Optional[List[Dict[str, str]]] = None) -> bool:
+    """Require product details before a new appliance troubleshooting session."""
+    return _starts_new_appliance_topic(query) and not history
 
 def _build_trace(query: str, passages: List[PassageInput]) -> RetrievalTrace:
     """Build retrieval trace from passages."""
@@ -222,44 +236,130 @@ def _build_trace(query: str, passages: List[PassageInput]) -> RetrievalTrace:
     )
 
 
-def _retrieve_passages(query: str, top_k: int = 10) -> List[PassageInput]:
-    """Call real retrieval pipeline to get passages."""
-    if _retrieval_system is None:
-        logger.warning("Retrieval system not initialized")
-        return []
-    
+def _format_conversation_history(history: Optional[List[Dict[str, str]]]) -> str:
+    """Format recent messages so short replies retain their diagnostic meaning."""
+    if not history:
+        return ""
+
+    recent_messages = history[-6:]
+    formatted_messages = []
+    for message in recent_messages:
+        role = message.get("role", "user").capitalize()
+        content = message.get("content", "").strip()
+        if content:
+            formatted_messages.append(f"{role}: {content}")
+
+    return "\n".join(formatted_messages)
+
+
+def _is_diagnostic_follow_up(history: Optional[List[Dict[str, str]]]) -> bool:
+    """Distinguish an active diagnosis from product-specification intake."""
+    return any(message.get("role") == "assistant" for message in history or [])
+
+
+def _diagnostic_question_count(history: Optional[List[Dict[str, str]]]) -> int:
+    """Count prior assistant diagnostic turns in the active conversation."""
+    if not history:
+        return 0
+    return sum(1 for message in history if message.get("role") == "assistant")
+
+
+def _retrieve_passages(query: str, top_k: int = 10, conversation_history: Optional[List[Dict[str, str]]] = None) -> List[PassageInput]:
+    """Call fresh retrieval pipeline for every query, optionally with conversation context."""
     try:
-        # Get query embedding
-        from retrieval import create_embedding
-        query_vector = create_embedding(query)
+        # Build context-aware query from conversation history
+        retrieval_query = query
+        if conversation_history and len(conversation_history) > 0:
+            # Extract previous context from history (exclude the current query)
+            context_parts = []
+            for msg in conversation_history[:-1]:  # All but last (which is current query)
+                if msg.get("role") == "user":
+                    context_parts.append(f"User: {msg.get('content', '')}")
+                elif msg.get("role") == "assistant":
+                    # Extract first 100 chars of assistant response for context
+                    content = msg.get('content', '')
+                    if len(content) > 100:
+                        content = content[:100] + "..."
+                    context_parts.append(f"Assistant: {content}")
+            
+            if context_parts:
+                # Build enhanced query with history context
+                context_str = " | ".join(context_parts[-3:])  # Use last 3 messages for context
+                retrieval_query = f"{query}. Context: {context_str}"
+                logger.info(f"Enhanced query with history: {retrieval_query[:150]}...")
         
-        # Perform hybrid search
-        raw_results = _retrieval_system.search(
-            query=query,
-            query_vector=query_vector,
-            top_k=top_k
+        # Fresh retrieval: new query embedding + fresh hybrid search + fresh reranking
+        reranked_results = retrieve_documents(
+            retrieval_query,
+            candidate_k=max(top_k, 100),
+            final_k=max(top_k, 100),
         )
         
-        # Rerank results (note: candidates first, then query)
-        reranked_results = _reranker.rerank(raw_results, query)
+        if not reranked_results:
+            logger.warning(f"No results for query: {query}")
+            return []
+        
+        # ===== SEMANTIC FILTERING =====
+        # If query doesn't mention specific components, boost general appliance troubleshooting
+        query_lower = query.lower()
+        component_keywords = ["ice", "freezer", "dispenser", "water", "filter", "icemaker", "ice maker"]
+        query_mentions_component = any(kw in query_lower for kw in component_keywords)
+        
+        if not query_mentions_component and reranked_results:
+            top_text = reranked_results[0].get("text", "").lower()
+            component_mentions = ["icemaker", "ice maker", "ice cube", "water dispenser", "water filter"]
+            
+            if any(comp in top_text for comp in component_mentions):
+                # Deprioritize component-specific content
+                general_results = [r for r in reranked_results if not any(
+                    comp in r.get("text", "").lower() for comp in component_mentions
+                )]
+                component_results = [r for r in reranked_results if any(
+                    comp in r.get("text", "").lower() for comp in component_mentions
+                )]
+                
+                if general_results:
+                    reranked_results = general_results + component_results
+
+        conversation_text = " ".join(
+            message.get("content", "") for message in conversation_history or []
+        )
+        appliance_category = _infer_appliance_category(f"{query} {conversation_text}")
+        appliance_brand = _infer_brand(f"{query} {conversation_text}")
+
+        if appliance_category:
+            category_results = [
+                result for result in reranked_results
+                if result.get("category", "").lower() == appliance_category
+            ]
+            if category_results:
+                reranked_results = category_results
+
+        if appliance_brand:
+            brand_results = [
+                result for result in reranked_results
+                if appliance_brand in result.get("brand", "").lower()
+            ]
+            if brand_results:
+                reranked_results = brand_results
         
         # Convert to PassageInput objects
         passages = []
         for rank, result in enumerate(reranked_results[:top_k], 1):
             passages.append(PassageInput(
                 rank=rank,
-                chunk_id=result.get("chunk_id", ""),
+                chunk_id=result.get("id", ""),
                 text=result.get("text", ""),
-                source_url=result.get("source_url", ""),
-                heading_path=result.get("heading_path", ""),
-                page_type=result.get("page_type", ""),
-                effective_date=result.get("effective_date", ""),
-                pre_rerank_score=result.get("pre_rerank_score", 0.0),
-                post_rerank_score=result.get("score", 0.0),
+                source_url=result.get("url", ""),
+                heading_path="",
+                page_type="",
+                effective_date="",
+                pre_rerank_score=0.0,
+                post_rerank_score=result.get("rerank_score", 0.0),
             ))
         
         logger.info(f"Retrieved {len(passages)} passages for query: {query}")
-        return passages
+        return passages  # Use original query for logging
         
     except Exception as e:
         logger.error(f"Error retrieving passages: {e}")
@@ -272,8 +372,8 @@ def _retrieve_passages(query: str, top_k: int = 10) -> List[PassageInput]:
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize retrieval system on startup."""
-    _init_retrieval()
+    """Application startup - retrieval system pre-initialized in retrieval/retrieve.py."""
+    logger.info("✅ HomeBoot Backend API started - fresh retrieval ready for every query")
 
 
 @app.get("/health")
@@ -283,8 +383,28 @@ async def health_check():
         "status": "healthy",
         "service": "HomeBoot Backend API",
         "version": "2.0.0",
-        "retrieval_available": _retrieval_system is not None,
+        "retrieval_available": True,
     }
+
+
+@app.post("/clarify", response_model=ClarifyResponse)
+async def handle_clarify(request: QueryRequest) -> ClarifyResponse:
+    """
+    Check if query needs clarification on brand/model.
+    Returns suggestion to ask user for brand/model if needed.
+    """
+    if _needs_product_specifications(request.query, request.conversation_history):
+        return ClarifyResponse(
+            needs_clarification=True,
+            message="Which brand is your appliance: Whirlpool or GE Appliances? Please include the appliance type and model number if available.",
+            suggestions=["Whirlpool", "GE Appliances"]
+        )
+    
+    return ClarifyResponse(
+        needs_clarification=False,
+        message="Query is specific enough to answer.",
+        suggestions=None
+    )
 
 
 @app.post("/retrieve", response_model=RetrieveResponse)
@@ -324,9 +444,39 @@ async def handle_query(request: QueryRequest) -> QueryResponse:
     """
     try:
         logger.info(f"Query request: {request.query}")
+
+        # A full appliance question begins a separate topic even if an older
+        # client accidentally includes messages from a previous conversation.
+        conversation_history = request.conversation_history
+        if _starts_new_appliance_topic(request.query) and _changes_appliance_category(
+            request.query, conversation_history
+        ):
+            conversation_history = None
+
+        # Require product details before retrieval when an older client bypasses /clarify.
+        if _needs_product_specifications(request.query, conversation_history):
+            return QueryResponse(
+                query=request.query,
+                answer="Which brand is your appliance: Whirlpool or GE Appliances? Please include the appliance type and model number if available.",
+                citations=[],
+                refusal=False,
+                safety_flag=False,
+                retrieval_trace=_build_trace(request.query, []),
+            )
+
+        # Enforce the same brand gate here as a fallback for older frontend clients.
+        if _needs_brand_clarification(request.query, conversation_history):
+            return QueryResponse(
+                query=request.query,
+                answer="To provide the most accurate troubleshooting, could you please tell me the brand and model of your appliance?",
+                citations=[],
+                refusal=False,
+                safety_flag=False,
+                retrieval_trace=_build_trace(request.query, []),
+            )
         
-        # Step 1: Retrieve real passages
-        passages = _retrieve_passages(request.query, request.top_k)
+        # Step 1: Retrieve real passages (with optional conversation history)
+        passages = _retrieve_passages(request.query, request.top_k, conversation_history)
         
         if not passages:
             logger.warning("No passages retrieved")
@@ -360,8 +510,9 @@ async def handle_query(request: QueryRequest) -> QueryResponse:
         # Step 3: Confidence check (refusal)
         scores = [p.post_rerank_score for p in passages]
         should_refuse_answer, refusal_reason = should_refuse(scores)
+        is_follow_up = _is_diagnostic_follow_up(conversation_history)
         
-        if should_refuse_answer:
+        if should_refuse_answer and not is_follow_up:
             logger.info(f"Refusing answer: {refusal_reason}")
             return QueryResponse(
                 query=request.query,
@@ -375,7 +526,25 @@ async def handle_query(request: QueryRequest) -> QueryResponse:
         
         # Step 4: Generate answer
         context = "\n\n".join([p.text for p in passages])
-        answer = generate_answer(request.query, context)
+        formatted_history = _format_conversation_history(conversation_history)
+        diagnostic_question_count = _diagnostic_question_count(conversation_history)
+        generation_question = request.query
+        if formatted_history:
+            generation_question = (
+                "Conversation history:\n"
+            f"{formatted_history}\n\n"
+                f"Latest user reply: {request.query}\n\n"
+                "Respond only to the latest user reply. Do not repeat the conversation history or these instructions. "
+            )
+            if diagnostic_question_count >= MAX_DIAGNOSTIC_QUESTIONS:
+                generation_question += (
+                    "You have completed the diagnostic questions. Do not ask another question. "
+                    "Give the most likely conclusion and next action supported by the context. "
+                    "If the checks do not identify a safe user-fix, recommend scheduling service."
+                )
+            else:
+                generation_question += "Ask exactly one next diagnostic question or give the next safe troubleshooting step."
+        answer = generate_answer(generation_question, context)
         
         # Step 5: Extract citations (convert Pydantic models to dicts)
         passages_dicts = [p.dict() for p in passages]

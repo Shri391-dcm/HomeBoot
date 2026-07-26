@@ -18,6 +18,10 @@ let conversationState = {
     clarifyingQuestions: [],
     clarifyingAnswers: [],
     mockData: null,
+    inConversation: false,
+    conversationHistory: [],  // Track full conversation for context-aware retrieval
+    activeApplianceCategory: null,
+    selectedBrand: null,
 };
 
 // ===============================
@@ -70,6 +74,72 @@ function openChat() {
 
 function closeChat() {
     chatModal.classList.remove('show');
+    resetChat();
+}
+
+function resetChat() {
+    conversationState = {
+        originalQuery: null,
+        needsClarification: false,
+        clarifyingQuestions: [],
+        clarifyingAnswers: [],
+        mockData: null,
+        inConversation: false,
+        conversationHistory: [],
+        activeApplianceCategory: null,
+        selectedBrand: null,
+    };
+    chatMessages.replaceChildren();
+    addMessage("Hi! I'm ApplianceAI. Ask me anything about your Whirlpool or GE appliances!", 'assistant');
+    messageInput.value = '';
+    setLoading(false);
+}
+
+function getApplianceCategory(message) {
+    const normalizedMessage = message.toLowerCase();
+    if (/\b(fridge|fidge|refrigerator|refrgerator|refrigirator|freezer)\b/.test(normalizedMessage)) {
+        return 'refrigerator';
+    }
+    if (/\b(washer|washing machine)\b/.test(normalizedMessage)) {
+        return 'washer';
+    }
+    if (/\bdishwasher\b/.test(normalizedMessage)) {
+        return 'dishwasher';
+    }
+    if (/\bdryer\b/.test(normalizedMessage)) {
+        return 'dryer';
+    }
+    return null;
+}
+
+function getSupportedBrand(message) {
+    const normalizedMessage = message.toLowerCase();
+    if (/\bwhirlpool\b/.test(normalizedMessage)) {
+        return 'Whirlpool';
+    }
+    if (/\b(ge|ge appliances|general electric)\b/.test(normalizedMessage)) {
+        return 'GE Appliances';
+    }
+    return null;
+}
+
+function startsNewApplianceIssue(message) {
+    const appliancePattern = /\b(fridge|fidge|refrigerator|refrgerator|refrigirator|freezer|washer|washing machine|dishwasher|dryer)\b/i;
+    const questionPattern = /\b(how|what|when|where|why|can|should|is|are|do|does|will|help|move|install|clean|repair|replace|prepare|safe|safely|not working|not cooling|not draining|not starting|leaking|broken|problem|issue)\b/i;
+    const wordCount = message.split(/\s+/).length;
+
+    // Short answers such as "yes", "no", and "cool" stay in the current
+    // diagnosis. A substantive appliance question starts its own topic.
+    return wordCount >= 3 && appliancePattern.test(message) && questionPattern.test(message);
+}
+
+function changesApplianceCategory(message) {
+    const messageCategory = getApplianceCategory(message);
+    return (
+        messageCategory !== null
+        && conversationState.activeApplianceCategory !== null
+        && messageCategory !== conversationState.activeApplianceCategory
+    );
 }
 
 // ===============================
@@ -82,14 +152,75 @@ async function handleSendMessage(e) {
     const message = messageInput.value.trim();
     if (!message) return;
 
-    // Check if we're answering clarifying questions
+    // Check if we're answering clarifying questions (brand/model)
     if (conversationState.needsClarification) {
         handleClarifyingAnswer(message);
         messageInput.value = '';
         return;
     }
 
-    // New question - start fresh
+    // A full appliance problem statement starts a new diagnosis, even if a prior
+    // conversation is still open in the chat window.
+    if (
+        conversationState.inConversation
+        && startsNewApplianceIssue(message)
+        && changesApplianceCategory(message)
+    ) {
+        conversationState.inConversation = false;
+        conversationState.conversationHistory = [];
+        conversationState.activeApplianceCategory = null;
+        conversationState.selectedBrand = null;
+    }
+
+    // Check if we're in an active diagnostic conversation
+    if (conversationState.inConversation) {
+        addMessage(message, 'user');
+        messageInput.value = '';
+        setLoading(true);
+
+        // Add user message to history
+        conversationState.conversationHistory.push({
+            role: 'user',
+            content: message
+        });
+
+        try {
+            // Send follow-up response directly to /query with full conversation history
+            const response = await fetch(`${CONFIG.backendUrl}/query`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    query: message,
+                    top_k: 5,
+                    conversation_history: conversationState.conversationHistory
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error(`Query failed: ${response.status}`);
+            }
+
+            const result = await response.json();
+            displayResponse(result);
+            
+            // Add assistant response to history
+            conversationState.conversationHistory.push({
+                role: 'assistant',
+                content: result.answer
+            });
+
+        } catch (error) {
+            console.error('Error:', error);
+            addMessage(`❌ Error: ${error.message}`, 'assistant');
+        } finally {
+            setLoading(false);
+        }
+        return;
+    }
+
+    // New question - start fresh conversation
     addMessage(message, 'user');
     messageInput.value = '';
     setLoading(true);
@@ -97,10 +228,20 @@ async function handleSendMessage(e) {
     conversationState.originalQuery = message;
     conversationState.needsClarification = false;
     conversationState.clarifyingAnswers = [];
+    conversationState.inConversation = false;
+    conversationState.conversationHistory = [];  // Reset history for new conversation
+    conversationState.activeApplianceCategory = getApplianceCategory(message);
+    conversationState.selectedBrand = null;
+    
+    // Add initial user query to history
+    conversationState.conversationHistory.push({
+        role: 'user',
+        content: message
+    });
 
     try {
-        // Call backend /query endpoint for full RAG pipeline
-        const queryResponse = await fetch(`${CONFIG.backendUrl}/query`, {
+        // First, check if query needs clarification
+        const clarifyResponse = await fetch(`${CONFIG.backendUrl}/clarify`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -111,12 +252,63 @@ async function handleSendMessage(e) {
             }),
         });
 
+        if (!clarifyResponse.ok) {
+            throw new Error(`Clarify check failed: ${clarifyResponse.status}`);
+        }
+
+        const clarifyResult = await clarifyResponse.json();
+        console.log('Clarify result:', clarifyResult);
+
+        if (clarifyResult.needs_clarification) {
+            // Collect product details before asking about the issue.
+            addMessage(clarifyResult.message, 'assistant');
+            
+            // Show suggestions if available
+            if (clarifyResult.suggestions && clarifyResult.suggestions.length > 0) {
+                const suggestionText = `Common brands: ${clarifyResult.suggestions.join(', ')}`;
+                addMessage(suggestionText, 'assistant');
+            }
+            
+            conversationState.needsClarification = true;
+            conversationState.clarifyingQuestions = [{
+                question: clarifyResult.message,
+                fieldName: 'product_specs'
+            }, {
+                question: 'Thanks. What problem are you experiencing with the appliance?',
+                fieldName: 'issue'
+            }];
+            setLoading(false);
+            return;
+        }
+
+        // Query is clear enough - proceed with normal query with conversation history
+        const queryResponse = await fetch(`${CONFIG.backendUrl}/query`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                query: message,
+                top_k: 5,
+                conversation_history: conversationState.conversationHistory
+            }),
+        });
+
         if (!queryResponse.ok) {
             throw new Error(`Query failed: ${queryResponse.status}`);
         }
 
         const queryResult = await queryResponse.json();
         console.log('Query result:', queryResult);
+
+        // Mark that we're in active conversation now (so follow-ups don't call /clarify again)
+        conversationState.inConversation = true;
+
+        // Add assistant response to conversation history
+        conversationState.conversationHistory.push({
+            role: 'assistant',
+            content: queryResult.answer
+        });
 
         // Display answer
         addMessage(queryResult.answer, 'assistant');
@@ -138,9 +330,28 @@ async function handleSendMessage(e) {
 }
 
 function handleClarifyingAnswer(answer) {
+    const isBrandAnswer = conversationState.clarifyingAnswers.length === 0;
+    const selectedBrand = getSupportedBrand(answer);
+
+    if (isBrandAnswer && !selectedBrand) {
+        addMessage(answer, 'user');
+        addMessage('Please choose Whirlpool or GE Appliances.', 'assistant');
+        return;
+    }
+
     // Track user's answer to clarifying question
     conversationState.clarifyingAnswers.push(answer);
     addMessage(answer, 'user');
+
+    if (isBrandAnswer) {
+        conversationState.selectedBrand = selectedBrand;
+    }
+
+    // Keep product details and the reported issue available for later retrieval.
+    conversationState.conversationHistory.push({
+        role: 'user',
+        content: answer
+    });
 
     // If we've answered all clarifying questions, proceed to answer
     if (conversationState.clarifyingAnswers.length >= conversationState.clarifyingQuestions.length) {
@@ -148,25 +359,31 @@ function handleClarifyingAnswer(answer) {
     } else {
         // Show next clarifying question
         const nextQuestionIndex = conversationState.clarifyingAnswers.length;
-        addMessage(`${conversationState.clarifyingQuestions[nextQuestionIndex]}`, 'assistant');
+        addMessage(conversationState.clarifyingQuestions[nextQuestionIndex].question, 'assistant');
     }
 }
 
 async function submitClarifiedQuery() {
     setLoading(true);
     conversationState.needsClarification = false;
+    conversationState.inConversation = true;  // Mark that we're now in active diagnostic conversation
 
     try {
-        // Call /query/followup with clarifying answers
-        const response = await fetch(`${CONFIG.backendUrl}/query/followup`, {
+        // Begin retrieval only after product specifications and issue are collected.
+        const productSpecs = conversationState.clarifyingAnswers[0] || '';
+        const issue = conversationState.clarifyingAnswers[1] || conversationState.originalQuery;
+        const enhancedQuery = `${issue} (${productSpecs})`;
+        
+        // Call /query with enhanced query and conversation history
+        const response = await fetch(`${CONFIG.backendUrl}/query`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                original_query: conversationState.originalQuery,
-                clarifying_answers: conversationState.clarifyingAnswers,
-                retrieved_passages: conversationState.mockData.retrieved_passages || [],
+                query: enhancedQuery,
+                top_k: 5,
+                conversation_history: conversationState.conversationHistory
             }),
         });
 
@@ -175,6 +392,13 @@ async function submitClarifiedQuery() {
         }
 
         const result = await response.json();
+        
+        // Add assistant response to conversation history
+        conversationState.conversationHistory.push({
+            role: 'assistant',
+            content: result.answer
+        });
+        
         displayResponse(result);
 
     } catch (error) {

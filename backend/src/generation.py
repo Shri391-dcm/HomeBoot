@@ -131,13 +131,6 @@ def extract_quote_from_passage(passage: str, claim: str) -> str:
         idx = passage.lower().find(claim.lower())
         return passage[idx : idx + len(claim)]
 
-    # Fallback: extract first MAX_QUOTE_LENGTH words of passage
-    words = passage.split()
-    quote = " ".join(words[: min(len(words), MAX_QUOTE_LENGTH)])
-
-    if len(quote.split()) >= MIN_QUOTE_LENGTH:
-        return quote
-
     return ""
 
 
